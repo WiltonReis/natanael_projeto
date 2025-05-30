@@ -1,4 +1,4 @@
-/*package com.morango.security;
+package com.morango.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -6,9 +6,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.morango.repository.UserRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
@@ -17,27 +20,27 @@ import java.io.IOException;
 public class JwtFilter extends OncePerRequestFilter {
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private TokenService tokenService;
+
+    @Autowired
+    private UserRepository repository;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain chain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
+        var token = recoverToken(request);
+        if (token != null){
+            var login = tokenService.validateToken((String) token);
+            UserDetails user = repository.findByUsername(login);
 
-        final String header = request.getHeader("Authorization");
-
-        if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
-            String username = jwtUtil.getUsernameFromToken(token);
-
-            if (username != null) {
-                UsernamePasswordAuthenticationToken auth =
-                    new UsernamePasswordAuthenticationToken(username, null, null);
-                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(auth);
-            }
+            var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
-
         chain.doFilter(request, response);
+}
+
+    private Object recoverToken(HttpServletRequest request) {
+        var authHeader = request.getHeader("Authorization");
+        if(authHeader == null) return null;
+        return authHeader.replace("Bearer ", "");
     }
-}*/
+}

@@ -1,10 +1,9 @@
 package com.morango.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import com.morango.model.entities.User;
 
 public interface UserRepository extends JpaRepository<User, Long> {
-    UserDetails findByUsername(String username);
+    User findByUsername(String username);
 }
