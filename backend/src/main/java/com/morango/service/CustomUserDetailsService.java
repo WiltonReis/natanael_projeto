@@ -10,15 +10,17 @@ import com.morango.model.entities.User;
 import com.morango.repository.UserRepository;
 
 @Service
-public class CustomUserDetailsService implements UserDetailsService {
+public class CustomUserDetailsService implements UserDetailsService{
 
     @Autowired
     private UserRepository repository;
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = repository.findByUsername(username);
+        System.out.println("User: " + user);
         if (user == null) {
             System.out.println("Usuário não encontrado");
+            throw new UsernameNotFoundException("Usuário não encontrado");
         }
 
         return org.springframework.security.core.userdetails.User

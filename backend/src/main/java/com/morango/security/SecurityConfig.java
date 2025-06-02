@@ -27,12 +27,19 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
-                .anyRequest().authenticated())
+                .requestMatchers(
+                    HttpMethod.POST, "/api/auth/**"
+                ).permitAll()
+                .requestMatchers(
+                "/", "/api/auth/login", "/register"
+            ).permitAll()
+                .anyRequest().authenticated()
+            )
             .addFilterBefore(JwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
-    }
+}
+
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config, UserDetailsService userDetailsService) throws Exception {

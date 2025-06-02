@@ -27,20 +27,25 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
-        var token = recoverToken(request);
-        if (token != null){
-            var login = tokenService.validateToken((String) token);
+           var token = recoverToken(request);
+    if (token != null){
+        var login = tokenService.validateToken(token);
+        if (login != null && !login.isEmpty()) {
             UserDetails user = repository.findByUsername(login);
-
-            var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            if (user != null) {
+                var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
         }
+    }
+}
+
         chain.doFilter(request, response);
 }
 
-    private Object recoverToken(HttpServletRequest request) {
+    private String recoverToken(HttpServletRequest request) {
         var authHeader = request.getHeader("Authorization");
-        if(authHeader == null) return null;
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) return null;
         return authHeader.replace("Bearer ", "");
     }
+
 }
